@@ -9,7 +9,7 @@
         "lint": "eslint .",
         "preview": "vite preview"
     },
-    "packageManager": "pnpm@10.30.3",
+    "packageManager": "npm@11.9.0",
     "dependencies": {
         "@tailwindcss/vite": "^4.1.17",
         "class-variance-authority": "^0.7.1",
@@ -39,5 +39,18 @@
         "typescript": "~5.9.3",
         "typescript-eslint": "^8.46.4",
         "vite": "^7.2.4"
-    }
+    },
+    "description": "**Kity** é um dashboard personalizado para estudantes que utilizam o **Estudo Reverso** (estudo baseado em questões). Diferente de ferramentas comuns que mostram apenas a porcentagem bruta de acertos, o Kity utiliza modelos estatísticos avançados para medir a real solidez do seu conhecimento.",
+    "main": "eslint.config.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/0x41337/kity.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/0x41337/kity/issues"
+    },
+    "homepage": "https://github.com/0x41337/kity#readme"
 }
