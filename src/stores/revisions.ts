@@ -41,7 +41,7 @@ function deriveMetrics(revisions: Revision[]): AggregateMetrics {
 
     return {
         ...calculateMetrics(totalHits, totalQuestions),
-        totalQuestionsReviewed: totalQuestions,
+        totalQuestionsReviewed: totalHits,
     }
 }
 
