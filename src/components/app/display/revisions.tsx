@@ -14,9 +14,10 @@ import { useRevisionStore } from "@/stores/revisions"
 import { calculateMetrics } from "@/lib/statistics"
 
 import { EditRevisionMenu } from "@/components/app/menus/edit-revision"
+import { QuickRevisionMenu } from "@/components/app/menus/quick-revision"
 import { DeleteRevisionAlert } from "@/components/app/alerts/delete-revision"
 
-import { Pencil, Trash2 } from "lucide-react"
+import { ZapIcon, PencilIcon, Trash2Icon } from "lucide-react"
 
 const DEFAULT_GROUP = "Não categorizados".toUpperCase()
 
@@ -61,14 +62,19 @@ export function RevisionsDisplayList() {
                                                 </CardDescription>
                                             </div>
                                             <div className="flex gap-1 shrink-0">
+                                                <QuickRevisionMenu index={index} revision={revision}>
+                                                    <Button size="icon" variant="ghost" className="h-7 w-7">
+                                                        <ZapIcon className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                </QuickRevisionMenu>
                                                 <EditRevisionMenu index={index} revision={revision}>
                                                     <Button size="icon" variant="ghost" className="h-7 w-7">
-                                                        <Pencil className="h-3.5 w-3.5" />
+                                                        <PencilIcon className="h-3.5 w-3.5" />
                                                     </Button>
                                                 </EditRevisionMenu>
                                                 <DeleteRevisionAlert index={index}>
                                                     <Button size="icon" variant="ghost" className="h-7 w-7">
-                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                        <Trash2Icon className="h-3.5 w-3.5" />
                                                     </Button>
                                                 </DeleteRevisionAlert>
                                             </div>
