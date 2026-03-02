@@ -18,14 +18,14 @@ import { DeleteRevisionAlert } from "@/components/app/alerts/delete-revision"
 
 import { Pencil, Trash2 } from "lucide-react"
 
-const DEFAULT_GROUP = "Não categorizados"
+const DEFAULT_GROUP = "Não categorizados".toUpperCase()
 
 export function RevisionsDisplayList() {
     const revisions = useRevisionStore((state) => state.revisions)
 
     const grouped = revisions.reduce<Record<string, { revision: typeof revisions[0]; index: number }[]>>(
         (acc, revision, index) => {
-            const key = revision.group?.trim() || DEFAULT_GROUP
+            const key = revision.group?.trim().toUpperCase() || DEFAULT_GROUP
             if (!acc[key]) acc[key] = []
             acc[key].push({ revision, index })
             return acc
@@ -43,7 +43,7 @@ export function RevisionsDisplayList() {
         <div className="w-full flex flex-col gap-8">
             {entries.map(([group, items]) => (
                 <div key={group} className="flex flex-col gap-3">
-                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
+                    <p className="max-w-lg text-sm font-bold text-muted-foreground uppercase tracking-wide break-words">
                         {group}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-2">
