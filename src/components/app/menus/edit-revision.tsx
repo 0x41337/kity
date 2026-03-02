@@ -68,6 +68,7 @@ function AccuracyPreview({ accuracy, hasError }: AccuracyPreviewProps) {
 
 type FormData = {
     subject: string
+    group: string
     total: number
     hits: number
 }
@@ -89,6 +90,7 @@ export function EditRevisionMenu({ index, revision, children }: EditRevisionMenu
     const [step, setStep] = useState(0)
     const [form, setForm] = useState<FormData>({
         subject: revision.subject,
+        group: revision.group || "",
         total: revision.total,
         hits: revision.hits,
     })
@@ -96,7 +98,7 @@ export function EditRevisionMenu({ index, revision, children }: EditRevisionMenu
     const updateRevision = useRevisionStore((state) => state.updateRevision)
 
     const resetAndClose = () => {
-        setForm({ subject: revision.subject, total: revision.total, hits: revision.hits })
+        setForm({ subject: revision.subject, group: revision.group || "", total: revision.total, hits: revision.hits })
         setStep(0)
         setIsOpen(false)
     }
@@ -104,7 +106,7 @@ export function EditRevisionMenu({ index, revision, children }: EditRevisionMenu
     const handleOpenChange = (open: boolean) => {
         if (open) {
             // Re-sync form with current revision data when opening
-            setForm({ subject: revision.subject, total: revision.total, hits: revision.hits })
+            setForm({ subject: revision.subject, group: revision.group || "", total: revision.total, hits: revision.hits })
             setStep(0)
             setIsOpen(true)
         } else {
@@ -156,16 +158,29 @@ export function EditRevisionMenu({ index, revision, children }: EditRevisionMenu
 
                 <div className="space-y-4">
                     {step === 0 && (
-                        <div className="space-y-2">
-                            <Label htmlFor="subject">Matéria ou tópico</Label>
-                            <Input
-                                id="subject"
-                                placeholder="Ex: Direito Administrativo"
-                                value={form.subject}
-                                autoFocus
-                                onChange={(e) => setField("subject", e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && form.subject.trim() && setStep(1)}
-                            />
+                        <div className="space-y-3">
+
+                            <div className="space-y-2">
+                                <Label htmlFor="subject">Editar assunto</Label>
+                                <Input
+                                    id="subject"
+                                    placeholder="Ex: Direito Administrativo"
+                                    value={form.subject}
+                                    autoFocus
+                                    onChange={(e) => setField("subject", e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && form.subject.trim() && setStep(1)}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="group">Editar grupo</Label>
+                                <Input
+                                    id="group"
+                                    placeholder="Ex: Faculdade"
+                                    value={form.group}
+                                    onChange={(e) => setField("group", e.target.value)}
+                                />
+                            </div>
                         </div>
                     )}
 

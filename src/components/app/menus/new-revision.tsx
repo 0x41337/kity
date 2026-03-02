@@ -66,6 +66,7 @@ function AccuracyPreview({ accuracy, hasError }: AccuracyPreviewProps) {
 
 type FormData = {
     subject: string
+    group: string
     total: number
     hits: number
 }
@@ -80,12 +81,12 @@ function clamp(value: number, min: number, max: number): number {
 export function NewRevisionMenu({ children }: { children: React.ReactNode }) {
     const [isOpen, setIsOpen] = useState(false)
     const [step, setStep] = useState(0)
-    const [form, setForm] = useState<FormData>({ subject: "", total: 0, hits: 0 })
+    const [form, setForm] = useState<FormData>({ group: "", subject: "", total: 0, hits: 0 })
 
     const addRevision = useRevisionStore((state) => state.addRevision)
 
     const resetAndClose = () => {
-        setForm({ subject: "", total: 0, hits: 0 })
+        setForm({ group: "", subject: "", total: 0, hits: 0 })
         setStep(0)
         setIsOpen(false)
     }
@@ -139,17 +140,30 @@ export function NewRevisionMenu({ children }: { children: React.ReactNode }) {
 
                 <div className="space-y-4">
                     {step === 0 && (
-                        <div className="space-y-2">
-                            <Label htmlFor="subject">O que você vai revisar?</Label>
-                            <Input
-                                id="subject"
-                                placeholder="Ex: Direito Administrativo"
-                                value={form.subject}
-                                autoFocus
-                                onChange={(e) => setField("subject", e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && form.subject.trim() && setStep(1)}
-                            />
+                        <div className="space-y-3">
+                            <div className="space-y-2">
+                                <Label htmlFor="subject">O que você vai revisar?</Label>
+                                <Input
+                                    id="subject"
+                                    placeholder="Ex: Direito Administrativo"
+                                    value={form.subject}
+                                    autoFocus
+                                    onChange={(e) => setField("subject", e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && form.subject.trim() && setStep(1)}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="group">Você deseja agrupar essa revisão? <span className="text-muted-foreground">(opcional)</span></Label>
+                                <Input
+                                    id="group"
+                                    placeholder="Ex: Faculdade"
+                                    value={form.group}
+                                    onChange={(e) => setField("group", e.target.value)}
+                                />
+                            </div>
                         </div>
+
                     )}
 
                     {step === 1 && (

@@ -1,6 +1,7 @@
 export interface Revision {
     hits: number
     total: number
+    group?: string
     subject: string
 }
 
