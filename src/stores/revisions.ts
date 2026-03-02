@@ -9,6 +9,7 @@ import type { Revision, Revisions } from "@/lib/revisions"
  * These are never persisted — always recalculated from source data.
  */
 interface AggregateMetrics extends RevisionMetrics {
+    totalQuestions: number
     totalQuestionsReviewed: number
 }
 
@@ -30,6 +31,7 @@ const EMPTY_METRICS: AggregateMetrics = {
     accuracyRate: 0,
     knowledgeRate: 0,
     marginOfError: 0,
+    totalQuestions: 0,
     totalQuestionsReviewed: 0,
 }
 
@@ -41,6 +43,7 @@ function deriveMetrics(revisions: Revision[]): AggregateMetrics {
 
     return {
         ...calculateMetrics(totalHits, totalQuestions),
+        totalQuestions: totalQuestions,
         totalQuestionsReviewed: totalHits,
     }
 }

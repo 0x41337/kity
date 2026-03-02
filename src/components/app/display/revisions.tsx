@@ -43,7 +43,7 @@ export function RevisionsDisplayList() {
         <div className="w-full flex flex-col gap-8">
             {entries.map(([group, items]) => (
                 <div key={group} className="flex flex-col gap-3">
-                    <p className="max-w-lg text-sm font-bold text-muted-foreground uppercase tracking-wide break-words">
+                    <p className="max-w-lg text-sm font-bold text-muted-foreground uppercase tracking-wide wrap-break-word">
                         {group}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-2">

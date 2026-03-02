@@ -2,7 +2,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useRevisionStore } from "@/stores/revisions"
 
 export function GeneralMetrics() {
-    const { accuracyRate, knowledgeRate, totalQuestionsReviewed } = useRevisionStore(
+    const {
+        accuracyRate,
+        knowledgeRate,
+        totalQuestions,
+        totalQuestionsReviewed,
+    } = useRevisionStore(
         (state) => state.metrics
     )
 
@@ -52,10 +57,11 @@ export function GeneralMetrics() {
                     </CardDescription>
                 </CardHeader>
 
-                <CardContent className="mt-auto">
+                <CardContent className="flex flex-row mt-auto">
                     <p className="text-3xl font-bold tabular-nums">
                         {totalQuestionsReviewed}
                     </p>
+                    <p className="text-3xl font-bold tabular-nums text-muted-foreground">/{totalQuestions}</p>
                 </CardContent>
             </Card>
         </div>
