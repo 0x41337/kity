@@ -83,10 +83,12 @@ interface EditRevisionMenuProps {
     index: number
     revision: Revision
     children: React.ReactNode
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
-export function EditRevisionMenu({ index, revision, children }: EditRevisionMenuProps) {
-    const [isOpen, setIsOpen] = useState(false)
+export function EditRevisionMenu({ index, revision, children, open: controlledOpen, onOpenChange: controlledOnOpenChange }: EditRevisionMenuProps) {
+    const [internalOpen, setInternalOpen] = useState(false)
     const [step, setStep] = useState(0)
     const [form, setForm] = useState<FormData>({
         subject: revision.subject,
@@ -94,6 +96,10 @@ export function EditRevisionMenu({ index, revision, children }: EditRevisionMenu
         total: revision.total,
         hits: revision.hits,
     })
+
+    const isControlled = controlledOpen !== undefined
+    const isOpen = isControlled ? controlledOpen : internalOpen
+    const setIsOpen = isControlled ? (controlledOnOpenChange ?? (() => { })) : setInternalOpen
 
     const updateRevision = useRevisionStore((state) => state.updateRevision)
 
@@ -105,7 +111,6 @@ export function EditRevisionMenu({ index, revision, children }: EditRevisionMenu
 
     const handleOpenChange = (open: boolean) => {
         if (open) {
-            // Re-sync form with current revision data when opening
             setForm({ subject: revision.subject, group: revision.group || "", total: revision.total, hits: revision.hits })
             setStep(0)
             setIsOpen(true)
@@ -143,7 +148,9 @@ export function EditRevisionMenu({ index, revision, children }: EditRevisionMenu
 
     return (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-            <DialogTrigger asChild>{children}</DialogTrigger>
+            {!isControlled && (
+                <DialogTrigger asChild>{children}</DialogTrigger>
+            )}
             <DialogContent className="max-w-sm sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Editar revisão</DialogTitle>
@@ -159,7 +166,6 @@ export function EditRevisionMenu({ index, revision, children }: EditRevisionMenu
                 <div className="space-y-4">
                     {step === 0 && (
                         <div className="space-y-3">
-
                             <div className="space-y-2">
                                 <Label htmlFor="subject">Editar assunto</Label>
                                 <Input
@@ -171,7 +177,6 @@ export function EditRevisionMenu({ index, revision, children }: EditRevisionMenu
                                     onKeyDown={(e) => e.key === "Enter" && form.subject.trim() && setStep(1)}
                                 />
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="group">Editar grupo</Label>
                                 <Input
@@ -231,10 +236,7 @@ export function EditRevisionMenu({ index, revision, children }: EditRevisionMenu
                                 </Field>
                             </div>
 
-                            <AccuracyPreview
-                                accuracy={accuracy}
-                                hasError={hitsExceedTotal}
-                            />
+                            <AccuracyPreview accuracy={accuracy} hasError={hitsExceedTotal} />
                         </>
                     )}
                 </div>
@@ -246,19 +248,12 @@ export function EditRevisionMenu({ index, revision, children }: EditRevisionMenu
                                 Voltar
                             </Button>
                         )}
-
                         {step < STEPS.length - 1 ? (
-                            <Button
-                                disabled={!form.subject.trim()}
-                                onClick={() => setStep(step + 1)}
-                            >
+                            <Button disabled={!form.subject.trim()} onClick={() => setStep(step + 1)}>
                                 Próximo
                             </Button>
                         ) : (
-                            <Button
-                                onClick={handleFinish}
-                                disabled={form.total <= 0 || hitsExceedTotal}
-                            >
+                            <Button onClick={handleFinish} disabled={form.total <= 0 || hitsExceedTotal}>
                                 Salvar Alterações
                             </Button>
                         )}

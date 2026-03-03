@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { XIcon, CheckIcon, UndoIcon, RedoIcon } from "lucide-react"
 
 import { Kbd } from "@/components/ui/kbd"
@@ -45,7 +45,6 @@ export function QuickRevisionMenu({ index, revision, children }: QuickRevisionMe
     }
 
     const handleHit = () => commit({ hits: current.hits + 1, total: current.total + 1 })
-
     const handleMiss = () => commit({ hits: current.hits, total: current.total + 1 })
 
     const handleUndo = () => {
@@ -64,6 +63,18 @@ export function QuickRevisionMenu({ index, revision, children }: QuickRevisionMe
         updateRevision(index, { ...revision, ...next })
     }
 
+    const handleUndoRef = useRef(handleUndo)
+    const handleRedoRef = useRef(handleRedo)
+    const canUndoRef = useRef(canUndo)
+    const canRedoRef = useRef(canRedo)
+
+    useEffect(() => {
+        handleUndoRef.current = handleUndo
+        handleRedoRef.current = handleRedo
+        canUndoRef.current = canUndo
+        canRedoRef.current = canRedo
+    })
+
     const handleOpenChange = (open: boolean) => {
         if (!open) {
             setPast([])
@@ -76,21 +87,24 @@ export function QuickRevisionMenu({ index, revision, children }: QuickRevisionMe
         if (!isOpen) return
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            const isUndo = e.key === "z" && (e.ctrlKey || e.metaKey) && !e.shiftKey
-            const isRedo = e.key === "z" && (e.ctrlKey || e.metaKey) && e.shiftKey
+            const key = e.key.toLowerCase()
+            const isModifier = e.ctrlKey || e.metaKey
+
+            const isUndo = key === "z" && isModifier && !e.shiftKey
+            const isRedo = key === "z" && isModifier && e.shiftKey
 
             if (isUndo) {
                 e.preventDefault()
-                if (canUndo) handleUndo()
+                if (canUndoRef.current) handleUndoRef.current()
             } else if (isRedo) {
                 e.preventDefault()
-                if (canRedo) handleRedo()
+                if (canRedoRef.current) handleRedoRef.current()
             }
         }
 
         window.addEventListener("keydown", handleKeyDown)
         return () => window.removeEventListener("keydown", handleKeyDown)
-    }, [isOpen, canUndo, canRedo, past, future])
+    }, [isOpen])
 
     return (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>

@@ -12,14 +12,24 @@ import {
 
 import { useRevisionStore } from "@/stores/revisions"
 
-export function DeleteRevisionAlert({ index, children }: { index: number, children: React.ReactNode }) {
+interface DeleteRevisionAlertProps {
+    index: number
+    children: React.ReactNode
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
+}
+
+export function DeleteRevisionAlert({ index, children, open, onOpenChange }: DeleteRevisionAlertProps) {
     const deleteRevision = useRevisionStore((state) => state.deleteRevision)
+    const isControlled = open !== undefined
 
     return (
-        <AlertDialog>
-            <AlertDialogTrigger asChild>
-                {children}
-            </AlertDialogTrigger>
+        <AlertDialog open={open} onOpenChange={onOpenChange}>
+            {!isControlled && (
+                <AlertDialogTrigger asChild>
+                    {children}
+                </AlertDialogTrigger>
+            )}
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
