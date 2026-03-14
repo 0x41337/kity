@@ -104,7 +104,7 @@ function RevisionCard({ revision, index }: { revision: ReturnType<typeof useRevi
                 </div>
             </CardContent>
 
-            <CardFooter className="pt-0 gap-1">
+            <CardFooter className="pt-0 gap-1 px-1">
                 <QuickRevisionMenu index={index} revision={revision}>
                     <Button variant="secondary" className="flex-1">
                         <ZapIcon className="h-3.5 w-3.5" />
