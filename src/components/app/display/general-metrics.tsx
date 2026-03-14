@@ -1,6 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRevisionStore } from "@/stores/revisions"
 
+function formatCompactNumber(value: number) {
+    return new Intl.NumberFormat("pt-BR", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+    }).format(value)
+}
+
 export function GeneralMetrics() {
     const {
         accuracyRate,
@@ -61,7 +68,7 @@ export function GeneralMetrics() {
                     <p className="text-3xl font-bold tabular-nums">
                         {totalQuestionsReviewed}
                     </p>
-                    <p className="text-3xl font-bold tabular-nums text-muted-foreground">/{totalQuestions}</p>
+                    <p className="text-3xl font-bold tabular-nums truncate text-muted-foreground">/{formatCompactNumber(totalQuestions)}</p>
                 </CardContent>
             </Card>
         </div>
