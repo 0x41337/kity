@@ -98,7 +98,7 @@ function RevisionCard({ revision, index }: { revision: ReturnType<typeof useRevi
                         <p className="font-medium text-foreground tabular-nums">{knowledgeRate}%</p>
                     </div>
                     <div>
-                        <p className="text-muted-foreground">Margem de erro</p>
+                        <p className="text-muted-foreground">Índice de Incerteza</p>
                         <p className="font-medium text-foreground tabular-nums">±{marginOfError}%</p>
                     </div>
                 </div>
