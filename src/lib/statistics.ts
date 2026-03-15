@@ -113,7 +113,7 @@ export function inverseBeta(p: number, a: number, b: number): number {
  * Computes the lower bound of a one-sided 99% confidence interval for a proportion
  * using the Clopper-Pearson exact method (Beta distribution).
  *
- * The prior is Beta(hits + 1, total - hits + 1), which corresponds to a
+ * The prior is Beta(hits, total - hits), which corresponds to a
  * Bayesian estimate with a uniform prior — robust for small sample sizes.
  *
  * @param hits  - Number of successes
@@ -127,7 +127,7 @@ export function lowerConfidenceBound(hits: number, total: number): number {
     if (hits === 0) return 0
 
     // alpha = 0.01 → one-sided 99% lower confidence bound
-    return inverseBeta(0.01, hits + 1, total - hits + 1)
+    return inverseBeta(0.01, hits, total - hits + 1)
 }
 
 export interface RevisionMetrics {
