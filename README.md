@@ -13,7 +13,7 @@ O Kity resolve o "falso positivo" do estudo:
 
 ## 📊 O Módulo de Estatística: Modelagem de Conhecimento
 
-O coração do Kity é baseado em inferência Bayesiana e na **Distribuição Beta**. Em vez de olhar apenas para o passado (quantas você acertou), o Kity tenta prever o futuro (qual sua chance real de acertar a próxima questão).
+O coração do Kity é baseado em inferência estatística. Em vez de olhar apenas para o passado (quantas você acertou), o Kity tenta prever o futuro (qual sua chance real de acertar a próxima questão).
 
 ### Como funciona o cálculo:
 
@@ -27,15 +27,5 @@ O coração do Kity é baseado em inferência Bayesiana e na **Distribuição Be
 | --- | --- |
 | **Aproveitamento (Accuracy)** | A porcentagem bruta de acertos (Hits/Total). |
 | **Nível de Conhecimento** | Uma estimativa conservadora (99% de confiança). É o quanto você realmente domina o assunto "na pior das hipóteses". |
-| **Margem de Erro** | A distância entre seu aproveitamento e seu nível real. Quanto maior a margem, mais questões você precisa fazer para validar sua nota. |
-
-$$KnowledgeRate = I^{-1}_{0.01}(hits + 1, total - hits + 1)$$
-
-## 🛠️ Tecnologias
-
-* **React + Vite**
-* **Tailwind CSS + Shadcn/UI**
-* **Zustand** (Gerenciamento de estado)
-* **Lucide React** (Ícones)
-* **Matemática Pura:** Implementação manual de funções Gamma e Beta Incompleta para precisão estatística.
+| **Índice de Incerteza** | O quanto você pode estar subestimando seu conhecimento real. |
 
