@@ -11,6 +11,9 @@
     },
     "packageManager": "npm@11.9.0",
     "dependencies": {
+        "@automerge/automerge-repo": "^2.5.4",
+        "@automerge/automerge-repo-network-broadcastchannel": "^2.5.4",
+        "@automerge/automerge-repo-storage-indexeddb": "^2.5.4",
         "@tailwindcss/vite": "^4.1.17",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",

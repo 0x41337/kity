@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware"
 
 import { calculateMetrics, type RevisionMetrics } from "@/lib/statistics"
 import type { Revision, Revisions } from "@/lib/revisions"
+import { generateCode, publishSync, consumeSync } from "@/lib/sync"
 
 /**
  * Derived aggregate metrics computed from the full revision list.
@@ -25,6 +26,9 @@ interface RevisionStore {
     deleteRevision: (index: number) => void
     importData: (data: Revisions) => void
     clearData: () => void
+
+    syncPublish: () => Promise<string>
+    syncConsume: (code: string) => Promise<void>
 }
 
 const EMPTY_METRICS: AggregateMetrics = {
@@ -43,7 +47,7 @@ function deriveMetrics(revisions: Revision[]): AggregateMetrics {
 
     return {
         ...calculateMetrics(totalHits, totalQuestions),
-        totalQuestions: totalQuestions,
+        totalQuestions,
         totalQuestionsReviewed: totalHits,
     }
 }
@@ -60,7 +64,7 @@ export const useRevisionStore = create<RevisionStore>()(
             },
 
             updateRevision: (index, rev) => {
-                const revisions = get().revisions.map((r, i) => i === index ? rev : r)
+                const revisions = get().revisions.map((r, i) => (i === index ? rev : r))
                 set({ revisions, metrics: deriveMetrics(revisions) })
             },
 
@@ -75,6 +79,17 @@ export const useRevisionStore = create<RevisionStore>()(
             },
 
             clearData: () => set({ revisions: [], metrics: EMPTY_METRICS }),
+
+            syncPublish: async () => {
+                const code = generateCode()
+                await publishSync(code, get().revisions)
+                return code
+            },
+
+            syncConsume: async (code) => {
+                const merged = await consumeSync(code, get().revisions)
+                set({ revisions: merged, metrics: deriveMetrics(merged) })
+            },
         }),
         {
             name: "revision-storage",

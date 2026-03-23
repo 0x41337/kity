@@ -7,9 +7,6 @@ import App from "@/app"
 import { Toaster } from "@/components/ui/sonner"
 
 import { ThemeProvider } from "@/providers/theme-provider"
-import { initSyncFromUrl } from "@/stores/sync-store"
-
-initSyncFromUrl()
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>

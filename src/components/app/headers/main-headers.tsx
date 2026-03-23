@@ -1,7 +1,5 @@
 import { toast } from "sonner"
-import { useRef, useState } from "react"
-
-import UUID from "pure-uuid"
+import { useRef } from "react"
 
 import {
     DropdownMenu,
@@ -12,72 +10,29 @@ import {
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
-
 import { Button } from "@/components/ui/button"
 
 import { useTheme } from "@/providers/theme-provider"
 import { useRevisionStore } from "@/stores/revisions"
-import { useSyncStore, type SyncStatus } from "@/stores/sync-store"
+
+import { SyncMenu } from "@/components/app/menus/sync-menu"
 
 import {
-    Settings,
     Sun,
     Moon,
-    Monitor,
-    Download,
     Upload,
-    Share2,
-    Wifi,
-    WifiOff,
-    Loader2,
+    Monitor,
+    Settings,
+    Download,
+    ArrowLeftRight,
 } from "lucide-react"
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function buildRoomUrl(roomId: string): string {
-    const url = new URL(window.location.href)
-    url.search = ""
-    url.searchParams.set("room", roomId)
-    return url.toString()
-}
-
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function SyncStatusIcon({ status }: { status: SyncStatus }) {
-    if (status === "connecting") return <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-    if (status === "connected") return <Wifi className="h-4 w-4 mr-2" />
-    if (status === "error") return <WifiOff className="h-4 w-4 mr-2" />
-    return <Share2 className="h-4 w-4 mr-2" />
-}
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export function MainHeader() {
     const { setTheme } = useTheme()
     const importInputRef = useRef<HTMLInputElement>(null)
-    const [roomDialogOpen, setRoomDialogOpen] = useState(false)
 
     const revisions = useRevisionStore((s) => s.revisions)
     const importData = useRevisionStore((s) => s.importData)
-
-    const { status, roomId, peerCount, startSync, stopSync } = useSyncStore()
-    const isSyncing = status !== "idle"
-    const roomUrl = roomId ? buildRoomUrl(roomId) : ""
-
-    // ── Export ──────────────────────────────────────────────────────────────
 
     const handleExport = () => {
         const json = JSON.stringify({ total: revisions }, null, 2)
@@ -90,8 +45,6 @@ export function MainHeader() {
         URL.revokeObjectURL(url)
         toast.success("Revisões exportadas com sucesso!")
     }
-
-    // ── Import ──────────────────────────────────────────────────────────────
 
     const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -110,31 +63,6 @@ export function MainHeader() {
         e.target.value = ""
     }
 
-    // ── Sync ────────────────────────────────────────────────────────────────
-
-    const handleStartSync = () => {
-        const newRoomId = new UUID(4).toString()
-        const link = buildRoomUrl(newRoomId)
-
-        startSync(newRoomId)
-        window.history.pushState({}, "", link)
-        toast.success("Sincronização iniciada!")
-    }
-
-    const handleStopSync = () => {
-        stopSync()
-        window.history.pushState({}, "", window.location.pathname)
-        toast.info("Sincronização encerrada.")
-    }
-
-
-    const syncLabel =
-        status === "connecting" ? "Aguardando conexão…"
-            : status === "connected" ? `Conectado (${peerCount} dispositivo${peerCount !== 1 ? "s" : ""})`
-                : "Sincronizar"
-
-    // ── Render ───────────────────────────────────────────────────────────────
-
     return (
         <>
             <header className="flex items-center justify-between w-full border-b py-5">
@@ -144,7 +72,7 @@ export function MainHeader() {
                     </a>
                 </div>
 
-                <div className="px-5">
+                <div className="flex items-center gap-1 px-5">
                     <input
                         ref={importInputRef}
                         type="file"
@@ -152,6 +80,12 @@ export function MainHeader() {
                         className="hidden"
                         onChange={handleImport}
                     />
+
+                    <SyncMenu>
+                        <Button variant="ghost" size="icon" title="Sincronizar dispositivos">
+                            <ArrowLeftRight className="h-4 w-4" />
+                        </Button>
+                    </SyncMenu>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -182,58 +116,10 @@ export function MainHeader() {
                             <DropdownMenuItem onClick={() => importInputRef.current?.click()}>
                                 <Upload className="h-4 w-4 mr-2" /> Importar
                             </DropdownMenuItem>
-
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Sincronização</DropdownMenuLabel>
-
-                            {!isSyncing ? (
-                                <DropdownMenuItem onClick={handleStartSync}>
-                                    <Share2 className="h-4 w-4 mr-2" /> Sincronizar
-                                </DropdownMenuItem>
-                            ) : (
-                                <>
-                                    <DropdownMenuItem disabled>
-                                        <SyncStatusIcon status={status} />
-                                        {syncLabel}
-                                    </DropdownMenuItem>
-
-                                    <DropdownMenuItem onClick={() => setRoomDialogOpen(true)}>
-                                        <Wifi className="h-4 w-4 mr-2" /> Ver link da sala
-                                    </DropdownMenuItem>
-
-                                    <DropdownMenuItem
-                                        onClick={handleStopSync}
-
-                                    >
-                                        <WifiOff className="h-4 w-4 mr-2" /> Encerrar conexão
-                                    </DropdownMenuItem>
-                                </>
-                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
             </header>
-
-            <Dialog open={roomDialogOpen} onOpenChange={setRoomDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Compartilhar sala</DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                            Abra este link em outro dispositivo para sincronizar:
-                        </p>
-                        <input
-                            readOnly
-                            value={roomUrl}
-                            className="w-full text-sm px-3 py-2 border rounded bg-muted"
-                            onFocus={(e) => e.target.select()}
-                        />
-
-                    </div>
-                </DialogContent>
-            </Dialog>
         </>
     )
 }
