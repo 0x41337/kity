@@ -1,6 +1,6 @@
 # 🐱 Kity
 
-**Kity** é um dashboard personalizado para estudantes que utilizam o **Estudo Reverso** (estudo baseado em questões). Diferente de ferramentas comuns que mostram apenas a porcentagem bruta de acertos, o Kity utiliza modelos estatísticos avançados para medir a real solidez do seu conhecimento.
+**Kity** é um dashboard personalizado para estudantes desejam registrar suas informações de desempenho com precisão. Diferente de ferramentas comuns que mostram apenas a porcentagem bruta de acertos, o Kity utiliza modelos estatísticos avançados para medir a real solidez do seu conhecimento.
 
 ## 🚀 Por que o Kity? (O problema da Planilha Simples)
 
