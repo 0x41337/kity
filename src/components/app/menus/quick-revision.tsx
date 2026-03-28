@@ -27,21 +27,33 @@ type Snapshot = Pick<Revision, "hits" | "total">
 
 export function QuickRevisionMenu({ index, revision, children }: QuickRevisionMenuProps) {
     const [isOpen, setIsOpen] = useState(false)
+    const [current, setCurrent] = useState<Snapshot>({ hits: revision.hits, total: revision.total })
     const [past, setPast] = useState<Snapshot[]>([])
     const [future, setFuture] = useState<Snapshot[]>([])
 
     const updateRevision = useRevisionStore((state) => state.updateRevision)
+    const getRevision = useRevisionStore((state) => state.revisions)
 
-    const current: Snapshot = { hits: revision.hits, total: revision.total }
     const accuracy = current.total > 0 ? Math.round((current.hits / current.total) * 100) : 0
-
     const canUndo = past.length > 0
     const canRedo = future.length > 0
+
+    const handleOpenChange = (open: boolean) => {
+        if (open) {
+            setCurrent({ hits: revision.hits, total: revision.total })
+            setPast([])
+            setFuture([])
+        }
+        setIsOpen(open)
+    }
 
     const commit = (next: Snapshot) => {
         setPast((prev) => [...prev, current])
         setFuture([])
-        updateRevision(index, { ...revision, ...next })
+        setCurrent(next)
+        // Busca a revisão mais atual do store para não perder campos
+        const fresh = getRevision[index]
+        updateRevision(index, { ...fresh, ...next })
     }
 
     const handleHit = () => commit({ hits: current.hits + 1, total: current.total + 1 })
@@ -52,7 +64,9 @@ export function QuickRevisionMenu({ index, revision, children }: QuickRevisionMe
         const previous = past[past.length - 1]
         setPast((prev) => prev.slice(0, -1))
         setFuture((prev) => [current, ...prev])
-        updateRevision(index, { ...revision, ...previous })
+        setCurrent(previous)
+        const fresh = getRevision[index]
+        updateRevision(index, { ...fresh, ...previous })
     }
 
     const handleRedo = () => {
@@ -60,7 +74,9 @@ export function QuickRevisionMenu({ index, revision, children }: QuickRevisionMe
         const next = future[0]
         setFuture((prev) => prev.slice(1))
         setPast((prev) => [...prev, current])
-        updateRevision(index, { ...revision, ...next })
+        setCurrent(next)
+        const fresh = getRevision[index]
+        updateRevision(index, { ...fresh, ...next })
     }
 
     const handleUndoRef = useRef(handleUndo)
@@ -75,21 +91,12 @@ export function QuickRevisionMenu({ index, revision, children }: QuickRevisionMe
         canRedoRef.current = canRedo
     })
 
-    const handleOpenChange = (open: boolean) => {
-        if (!open) {
-            setPast([])
-            setFuture([])
-        }
-        setIsOpen(open)
-    }
-
     useEffect(() => {
         if (!isOpen) return
 
         const handleKeyDown = (e: KeyboardEvent) => {
             const key = e.key.toLowerCase()
             const isModifier = e.ctrlKey || e.metaKey
-
             const isUndo = key === "z" && isModifier && !e.shiftKey
             const isRedo = key === "z" && isModifier && e.shiftKey
 

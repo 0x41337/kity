@@ -3,6 +3,8 @@ export interface Revision {
     total: number
     group?: string
     subject: string
+    updatedAt?: number
+    deletedAt?: number
 }
 
 export type Revisions = {

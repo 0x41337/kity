@@ -3,23 +3,31 @@ import { persist, createJSONStorage } from "zustand/middleware"
 
 import { calculateMetrics, type RevisionMetrics } from "@/lib/statistics"
 import type { Revision, Revisions } from "@/lib/revisions"
-import { generateCode, publishSync, consumeSync } from "@/lib/sync"
+import {
+    mergeRevisions,
+    getOrCreateUserId,
+    setUserId,
+    createSyncSocket,
+    generateCode,
+    publishSync,
+    consumeSync,
+    type SyncSocket,
+} from "@/lib/sync"
 
-/**
- * Derived aggregate metrics computed from the full revision list.
- * These are never persisted — always recalculated from source data.
- */
 interface AggregateMetrics extends RevisionMetrics {
     totalQuestions: number
     totalQuestionsReviewed: number
 }
 
 interface RevisionStore {
-    /** Raw revision list — the only data persisted to localStorage */
+    // array interno — inclui deletados, usado para merge e sync
+    _revisions: Revision[]
+    // array visível — filtrado, usado pela UI
     revisions: Revision[]
-
-    /** Aggregate metrics derived from the revision list */
     metrics: AggregateMetrics
+
+    _ws: SyncSocket | null
+    _userId: string | null
 
     addRevision: (rev: Revision) => void
     updateRevision: (index: number, rev: Revision) => void
@@ -29,6 +37,10 @@ interface RevisionStore {
 
     syncPublish: () => Promise<string>
     syncConsume: (code: string) => Promise<void>
+
+    initSync: () => void
+    disconnectSync: () => void
+    desync: () => void
 }
 
 const EMPTY_METRICS: AggregateMetrics = {
@@ -41,10 +53,8 @@ const EMPTY_METRICS: AggregateMetrics = {
 
 function deriveMetrics(revisions: Revision[]): AggregateMetrics {
     if (revisions.length === 0) return EMPTY_METRICS
-
     const totalHits = revisions.reduce((acc, r) => acc + r.hits, 0)
     const totalQuestions = revisions.reduce((acc, r) => acc + r.total, 0)
-
     return {
         ...calculateMetrics(totalHits, totalQuestions),
         totalQuestions,
@@ -52,52 +62,117 @@ function deriveMetrics(revisions: Revision[]): AggregateMetrics {
     }
 }
 
+// Aplica um novo array interno e deriva o estado visível
+function applyRevisions(all: Revision[]) {
+    const visible = all.filter(r => !r.deletedAt)
+    return {
+        _revisions: all,
+        revisions: visible,
+        metrics: deriveMetrics(visible),
+    }
+}
+
 export const useRevisionStore = create<RevisionStore>()(
     persist(
         (set, get) => ({
+            _revisions: [],
             revisions: [],
             metrics: EMPTY_METRICS,
+            _ws: null,
+            _userId: null,
 
             addRevision: (rev) => {
-                const revisions = [...get().revisions, rev]
-                set({ revisions, metrics: deriveMetrics(revisions) })
+                const stamped = { ...rev, updatedAt: Date.now() }
+                const all = [...get()._revisions, stamped]
+                set(applyRevisions(all))
+                get()._ws?.push(all)
             },
 
             updateRevision: (index, rev) => {
-                const revisions = get().revisions.map((r, i) => (i === index ? rev : r))
-                set({ revisions, metrics: deriveMetrics(revisions) })
+                const stamped = { ...rev, updatedAt: Date.now() }
+                // index é relativo ao array visível — precisa mapear para o interno
+                const visibleIndex = get().revisions[index]?.subject
+                const all = get()._revisions.map(r =>
+                    r.subject === visibleIndex ? stamped : r
+                )
+                set(applyRevisions(all))
+                get()._ws?.push(all)
             },
 
             deleteRevision: (index) => {
-                const revisions = get().revisions.filter((_, i) => i !== index)
-                set({ revisions, metrics: deriveMetrics(revisions) })
+                const subject = get().revisions[index]?.subject
+                const all = get()._revisions.map(r =>
+                    r.subject === subject
+                        ? { ...r, deletedAt: Date.now(), updatedAt: Date.now() }
+                        : r
+                )
+                set(applyRevisions(all))
+                get()._ws?.push(all)
             },
 
             importData: (data) => {
-                const revisions = data.total ?? []
-                set({ revisions, metrics: deriveMetrics(revisions) })
+                const all = (data.total ?? []).map(r => ({
+                    ...r,
+                    updatedAt: r.updatedAt ?? Date.now(),
+                }))
+                set(applyRevisions(all))
+                get()._ws?.push(all)
             },
 
-            clearData: () => set({ revisions: [], metrics: EMPTY_METRICS }),
+            clearData: () => {
+                set({ _revisions: [], revisions: [], metrics: EMPTY_METRICS })
+                get()._ws?.push([])
+            },
 
             syncPublish: async () => {
                 const code = generateCode()
-                await publishSync(code, get().revisions)
+                const userId = getOrCreateUserId()
+                await publishSync(code, get()._revisions, userId)
                 return code
             },
 
             syncConsume: async (code) => {
-                const merged = await consumeSync(code, get().revisions)
-                set({ revisions: merged, metrics: deriveMetrics(merged) })
+                const { revisions, userId } = await consumeSync(code, get()._revisions)
+                setUserId(userId)
+                set(applyRevisions(revisions))
+                get().initSync()
+            },
+
+            initSync: () => {
+                const existing = get()._ws
+                if (existing) existing.close()
+
+                const userId = getOrCreateUserId()
+
+                const ws = createSyncSocket(userId, (remoteRevisions) => {
+                    const merged = mergeRevisions(get()._revisions, remoteRevisions)
+                    set(applyRevisions(merged))
+                })
+
+                set({ _ws: ws, _userId: userId })
+            },
+
+            disconnectSync: () => {
+                get()._ws?.close()
+                set({ _ws: null })
+            },
+
+            desync: () => {
+                get()._ws?.close()
+                localStorage.removeItem("kity-user-id")
+                get().initSync()
             },
         }),
         {
             name: "revision-storage",
             storage: createJSONStorage(() => localStorage),
-            partialize: (state) => ({ revisions: state.revisions }),
+            // Persiste o array interno completo (com deletados)
+            partialize: (state) => ({ _revisions: state._revisions }),
             onRehydrateStorage: () => (state) => {
                 if (state) {
-                    state.metrics = deriveMetrics(state.revisions)
+                    const visible = state._revisions.filter(r => !r.deletedAt)
+                    state.revisions = visible
+                    state.metrics = deriveMetrics(visible)
                 }
             },
         }

@@ -1,24 +1,30 @@
+import { useEffect, useRef } from "react"
 import { PlusIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-
 import { useRevisionStore } from "@/stores/revisions"
-
 import { NoRevisionsFound } from "@/components/app/no-revision-found"
 import { NewRevisionMenu } from "@/components/app/menus/new-revision"
 import { RevisionsDisplayList } from "@/components/app/display/revisions"
-
 import { MainHeader } from "@/components/app/headers/main-headers"
 import { GeneralMetrics } from "@/components/app/display/general-metrics"
 
 export function App() {
-    const revision = useRevisionStore((state) => state)
+    const revisions = useRevisionStore((state) => state.revisions)
+    const initSync = useRevisionStore((s) => s.initSync)
+    const syncInitialized = useRef(false)
+
+    useEffect(() => {
+        if (syncInitialized.current) return
+        syncInitialized.current = true
+        initSync()
+    }, [])
 
     return (
         <main className="flex flex-col gap-2">
             <MainHeader />
             {
-                revision.revisions.length == 0 ?
+                revisions.length == 0 ?
                     <section className="flex items-center justify-center py-50">
                         <NoRevisionsFound />
                     </section>
@@ -47,3 +53,9 @@ export function App() {
 }
 
 export default App
+
+// if (import.meta.env.DEV && import.meta.hot) {
+//     import.meta.hot.accept(() => {
+//         useRevisionStore.getState().initSync()
+//     })
+// }

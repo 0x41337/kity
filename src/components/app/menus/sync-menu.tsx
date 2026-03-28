@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { toast } from "sonner"
-import { Copy, RefreshCw } from "lucide-react"
+import { Copy, RefreshCw, Unplug } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,18 @@ import {
     DialogDescription,
     DialogTrigger,
 } from "@/components/ui/dialog"
+
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 import { useRevisionStore } from "@/stores/revisions"
 
@@ -27,6 +39,7 @@ export function SyncMenu({ children }: { children: React.ReactNode }) {
 
     const syncPublish = useRevisionStore((s) => s.syncPublish)
     const syncConsume = useRevisionStore((s) => s.syncConsume)
+    const desync = useRevisionStore((s) => s.desync)
 
     async function handleShare() {
         setLoading(true)
@@ -53,6 +66,12 @@ export function SyncMenu({ children }: { children: React.ReactNode }) {
         } finally {
             setLoading(false)
         }
+    }
+
+    function handleDesync() {
+        desync()
+        handleClose(false)
+        toast.success("Dispositivo dessincronizado.")
     }
 
     function handleClose(v: boolean) {
@@ -87,6 +106,31 @@ export function SyncMenu({ children }: { children: React.ReactNode }) {
                         <Button variant="outline" onClick={() => setMode("receive")}>
                             Tenho um código
                         </Button>
+
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" className="text-muted-foreground">
+                                    <Unplug className="h-4 w-4 mr-2" />
+                                    Dessincronizar dispositivo
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Dessincronizar este dispositivo?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Este dispositivo deixará de receber atualizações automáticas dos outros.
+                                        Seus dados locais serão mantidos, mas as alterações futuras não serão compartilhadas.
+                                        Você pode sincronizar novamente a qualquer momento usando um código.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDesync}>
+                                        Dessincronizar
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
                 )}
 

@@ -1,6 +1,6 @@
 // @ts-check
 /** @typedef {import("partykit/server").Room} Room */
-/** @typedef {import("partykit/server").Server} Server */
+/** @typedef {import("partykit/server").Connection} Connection */
 
 const CODE_TTL_MS = 10 * 60 * 1000 // 10m
 
@@ -10,11 +10,31 @@ const CORS_HEADERS = {
     "Access-Control-Allow-Headers": "Content-Type",
 }
 
-
 class PartyServer {
     /** @param {Room} room */
     constructor(room) {
         this.room = room
+    }
+
+    /** @param {Connection} conn */
+    async onConnect(conn) {
+        const revisions = await this.room.storage.get("revisions")
+        if (revisions) {
+            conn.send(JSON.stringify({ type: "sync", revisions }))
+        }
+    }
+
+    /** @param {string} message @param {Connection} conn */
+    async onMessage(message, conn) {
+        const data = JSON.parse(message)
+
+        if (data.type === "push") {
+            await this.room.storage.put("revisions", data.revisions)
+            this.room.broadcast(
+                JSON.stringify({ type: "sync", revisions: data.revisions }),
+                [conn.id]
+            )
+        }
     }
 
     /** @param {Request} req */
@@ -25,6 +45,7 @@ class PartyServer {
             return new Response(null, { status: 204, headers: CORS_HEADERS })
         }
 
+        // Fluxo de código manual (primeiro pareamento)
         if (method === "POST") {
             const body = await req.json()
             await this.room.storage.put("payload", body)
@@ -47,7 +68,6 @@ class PartyServer {
             }
 
             await this.room.storage.put("used", true)
-
             return Response.json(payload, { headers: CORS_HEADERS })
         }
 
